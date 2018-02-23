@@ -1,0 +1,11 @@
+steelydns:
+    image: exesdotnet/steelydns
+    volumes:
+        - ./config:/config
+    ports:
+        - "2053:2053/udp"
+        - "2053:2053/tcp"
+    environment:
+        - CONF_FILE=/config/dnscrypt-proxy.toml
+    restart: always
+
