@@ -40,15 +40,22 @@ elif [ "$1" = "-update" ]; then
 	exit 0
 
 elif [ "$1" = "-test" ]; then
-	CID=`docker ps -a | grep "exesdotnet/steelydns" | awk '{print $1}'`
-	docker top $CID
-	docker inspect --format='' $CID
 	docker history exesdotnet/steelydns
-	docker logs $CID
-	docker diff $CID
+
+	CID=`docker ps -a | grep "exesdotnet/steelydns" | awk '{print $1}'`
+	if [ "$CID" != "" ]; then
+		docker top $CID
+		docker inspect --format='' $CID
+		docker logs $CID
+		docker diff $CID
+		docker exec $CID ls -la
+	fi
 
 	host resolver1.opendns.com "127.0.1.1#2053"
 	host resolver2.opendns.com "127.0.2.1#2053"
+
+	#docker exec -t -i $CID /bin/bash
+	#docker run --rm -it --entrypoint=/bin/bash "exesdotnet/steelydns"
 
 else
 	echo ""
