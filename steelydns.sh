@@ -2,10 +2,12 @@
 
 if [ $# -ne 1 ]; then
 	echo ""
-	echo "Usage: $0 -run | -install | -update"
+	echo "Usage: $0 -run | -stop | -install | -update"
 	echo "-run     : Runs the docker"
+	echo "-stop    : Stops the docker"
 	echo "-install : Installs the docker"
 	echo "-update  : Updates Github repository"
+	echo "-edit    : Edits your configuration files"
 	echo "-test    : Tests the docker container"
 	echo ""
 	exit 1
@@ -32,12 +34,33 @@ if [ "$1" = "-install" ]; then
 elif [ "$1" = "-run" ]; then
 	sudo docker run -p 2053:2053/udp -p 2053:2053/tcp -d exesdotnet/steelydns
 
+if [ "$1" = "-stop" ]; then
+	CID=`docker container ls -a | grep "exesdotnet/steelydns" | awk '{print $1}'`
+	[ "$CID" == "" ] && exit 1;
+	docker stop $CID
+	sleep 3
+	docker kill $CID
+
 elif [ "$1" = "-update" ]; then
 	cd ~
 	rm -Rf ~/steelydns
 	git clone https://github.com/exesdotnet/steelydns.git
 	sudo chmod ugo+x ~/steelydns/steelydns.sh
 	exit 0
+
+elif [ "$1" = "-edit" ]; then
+	CID=`docker container ls -a | grep "exesdotnet/steelydns" | awk '{print $1}'`
+	[ "$CID" == "" ] && exit 1;
+
+	docker logs $CID
+	docker top $CID
+
+	VolP=`docker inspect $CID | grep -e Source -e volumes | awk '{print $2}' | cut -d'"' -f2`
+	echo $VolP | xargs sudo ls -la
+
+	sudo nano $VolP/dnscrypt-proxy.toml
+	sudo nano $VolP/dnsmasq.conf
+	sudo nano $VolP/extra_hosts
 
 elif [ "$1" = "-test" ]; then
 	docker history exesdotnet/steelydns
@@ -60,4 +83,3 @@ elif [ "$1" = "-test" ]; then
 else
 	echo ""
 fi
-
